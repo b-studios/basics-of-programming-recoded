@@ -1,38 +1,51 @@
 import frontends.{ UntypedLC, AE, Conditionals }
 
-package object typereconstruction extends TypeUtils {
+package object letpolymorphism extends TypeUtils {
 
-  object Syntax extends UntypedLC with AE with Conditionals
+  object Syntax extends UntypedLC with frontends.Let with AE with Conditionals
   import Syntax._
 
   // additional base types
   case object IntT extends Type
   case object BooleanT extends Type
 
-  /**
-   * Typecheck the given tree. This is much nicer if encoded as attribute
-   * grammar with one synthesized attribute per output.
-   */
-  def typecheck(e: Tree, env: Map[String, Type]): (Type, Constraints) = e match {
 
-    // Interesting rules
+  /**
+   * Typecheck the given tree. This is an extension to
+   * `typereconstruction.typecheck`.
+   *
+   * Importantly we use Map[String, TypeScheme] instead of Map[String, Type]!
+   */
+  def typecheck(e: Tree, env: Map[String, TypeScheme]): (Type, Constraints) = e match {
+
+    case Let(name, binding, body) => typecheck(binding, env) match {
+      case (t, c) => {
+        val τ = principleType(t, c)
+
+        val principleTypeScheme = ∀(freeVars(τ).map(VarT).toList) { τ }
+
+        // TODO not include variables already bound in env!
+        typecheck(body, env + (name -> principleTypeScheme))
+      }
+    }
+
+
+    // Also some changes for `Abs` and `Var`
     case Abs(name: String, body: Tree) => {
-      // Make up a fresh type var and bind it to `name` in order to
-      // type check the body
       val s = freshTypeVar
-      typecheck(body, env + (name -> s)) match {
+      typecheck(body, env + (name -> ∀(){ s })) match {
         case (t, c) => (ArrowT(s, t), c)
       }
     }
+    case Var(n) => (instantiateTypeScheme(env(n)), Nil)
+
+    // Nothing changed, compared to type reconstruction! 
     case App(fun: Tree, arg: Tree) => (typecheck(fun, env), typecheck(arg, env)) match {
       case ((f, c1), (a, c2)) => {
         val x = freshTypeVar
         (x, (f =!= ArrowT(a, x)) :: (c1 ++ c2))
       }
     }
-
-    // Boring rules
-    case Var(n) => (env(n), Nil)
     case Num(value: Int) => (IntT, Nil)
     case Bool(value: Boolean) => (BooleanT, Nil)
     case Succ(base: Tree) => typecheck(base, env) match {
