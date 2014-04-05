@@ -1,8 +1,14 @@
+import frontends.{ UntypedLC, AE, Conditionals }
+
 package object typereconstruction {
 
+  object Syntax extends UntypedLC with AE with Conditionals
+
+  import Syntax._
+
   /**
-   * Typecheck the given tree. This is much nicer as an attribute grammar
-   * with one synthesized attribute per output.
+   * Typecheck the given tree. This is much nicer if encoded as attribute
+   * grammar with one synthesized attribute per output.
    */
   def typecheck(e: Tree, env: Map[String, Type]): (Type, Constraints) = e match {
 
@@ -41,6 +47,9 @@ package object typereconstruction {
           (t, (c =!= BooleanT) :: (t =!= e) :: (c1 ++ c2 ++ c3))
       }
   }
+
+
+  // The rest is all independent of syntax.
 
   def principleType(t: Type, cs: Constraints): Type = {
     val unifier = unify(cs) match {

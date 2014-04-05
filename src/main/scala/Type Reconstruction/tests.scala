@@ -2,8 +2,8 @@ package typereconstruction
 
 object tests {
 
-  import edsl._
-
+  import Syntax._
+  
   println(typeOf(Num(4).succ.pred.succ.isZero)) //=> BooleanT
   println(typeOf(λ("x") { _.succ })) //=> (IntT => IntT)
   
