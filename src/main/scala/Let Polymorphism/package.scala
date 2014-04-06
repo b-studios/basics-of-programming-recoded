@@ -1,4 +1,5 @@
 import frontends.{ UntypedLC, AE, Conditionals }
+import utils._
 
 package object letpolymorphism extends TypeUtils {
 
@@ -22,10 +23,11 @@ package object letpolymorphism extends TypeUtils {
       case (t, c) => {
         val τ = principleType(t, c)
 
-        val principleTypeScheme = ∀(freeVars(τ).map(VarT).toList) { τ }
+        // Preventing capture of vars ∈ env prevents test program
+        // `expectFailure` to typecheck.
+        val principleTypeScheme = ∀(freeVars(τ) -- freeVars(env)) { τ }
 
-        // TODO not include variables already bound in env!
-        typecheck(body, env + (name -> principleTypeScheme))
+        typecheck(body, env + (name -> principleTypeScheme)).mapRight(_ ++ c)
       }
     }
 

@@ -21,3 +21,6 @@ Trying to unify all constraints imposed by the usage of the bound value leads to
 a contradiction `Int =:= Boolean`.
 
 So we need to instantiate the bound value *once per usage*.
+
+> We have to perform one single step of evaluation (substitute the binding for
+> typechecking)

@@ -14,4 +14,12 @@ object tests {
     }
 
   println(typeOf(prog))
+
+  val expectFailure: Tree = 
+    ((λ("f") { f =>
+      λ("x") { x => let("g", f) { _(0) } }
+    }) (λ("x") { x => _if (x) { true } _else { false} })) (true)
+
+  println(typeOf(expectFailure)) 
+  //=> Fails, cannot unify IntT with BooleanT
 }
